@@ -41,8 +41,11 @@ Main programs:
 		-Handle SIGINT by redirecting user into an shell with following commands:
 			```
 			list -> list out all connected client's thread id
+
 			list [client id] -> list out all art entry with the same client id
+
 			dump -> list out everything in the database
+
 			exit -> exit out of the program and unlink the four pipes
 			```
 
@@ -56,35 +59,51 @@ Main programs:
 		-Contains command:
 			```
 			start -> start the thread and connect to database if possible
+
 			close -> end the thread and disconnect from database if needed. Free everything
+
 			exit -> end the thread and disconnect from database if needed. Free everything
+
 			alloc -> allocate a space in database and insert the remote id to the table
+
 			dealloc [local id] -> deallocate the space in database and remove remote id from the table. Also uses cache. (explained later)
+
 			read [local id] -> read the name of an remote id in the table using local id to translate through it. Also uses cache. (explained later)
+
 			store [local id] [name] -> store the name into the art entry with the remote id translated from local id. Also uses cache. (explained later)
+
 			infotab -> interactive cmd used to navagate the table
+
 			dump -> added command that print out everything in the table and cache. Mainly used in process of debugging.
 			```
-			ps: local id is 0 - 63 inclusive. As the max number of remote id a table can handle is 64
+			NOTE: local id is 0 - 63 inclusive. As the max number of remote id a table can handle is 64
 
-		Note: ./client [pipe name] need to ran after ./warehouse_db [size].
-			  ./client will terminate if ./warehouse_db exit before client exit. printing "Server Shutdown"
+		NOTE: ./client [pipe name] need to ran after ./warehouse_db [size].
+			  	./client will terminate if ./warehouse_db exit before client exit. printing "Server Shutdown"
 
 
 Cache:
 
 	Cache is a array of size 4 containing remote id and art name
 
-	read ->		will first translate the table and read the remote id and if the cache has that remote id "cache hit" is printed and the name will be read.
-				if "cache miss" is printed then the client communicate to the server for the name and the store that remote id and name into the cache
-					if cache is full then evict at the last cache element which is cache[3]
+	read ->		First translate the table and read the remote id and if the cache has that remote id "cache hit"
+						is printed and the name will be read.
 
-	dealloc ->	the communication to server happens no matter what. After the communication if the "cache hit" the dealloced remote id, that cache will be evicted.
+						if "cache miss" is printed then the client communicate to the server for the name and the store that
+						remote id and name into the cache
 
-	store ->	the communication to the server happens no matter what. After the communication if the "cache hit" then that cache will be updated.
-				if "cache miss" then that cache will be added to the cache following the same eviction procedure as the read command.
+						if cache is full then evict at the last cache element which is cache[3]
 
-	cache will be free if needed in close and exit command.
+	dealloc ->	the communication to server happens no matter what. After the communication if the "cache hit" the
+							dealloced remote id, that cache will be evicted.
+
+	store ->	the communication to the server happens no matter what.
+						After the communication if the "cache hit" then that cache will be updated.
+
+						if "cache miss" then that cache will be added to the cache following the
+						same eviction procedure as the read command.
+
+	NOTE: cache will be free if needed in close and exit command.
 
 
 Error handling:
